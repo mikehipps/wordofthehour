@@ -93,25 +93,25 @@ function wordofthehour_cron() {
 function wordofthehour_get_definition_from_api($word) {
   $urlbase = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/";
   $apikey = "b8c6c7cd-c445-43d2-bf4d-dfed4b1ba55f";
-  
+
   $url = $urlbase . urlencode(trim($word)) . '?key=' . $apikey;
 
   $response = drupal_http_request($url, array());
-  $data = $response->data;
-  
-  $definition = trim(substr($data, strpos($data, ':') + 1));  
-  
-  $multidef = strpos($definition, ':');
 
-  if ($multidef) {
-    $definition = substr($definition, 0, $multidef - 1);
-  }
-  
-  $multidef = strpos($definition, '2');
-
-  if ($multidef) {
-    $definition = substr($definition, 0, $multidef - 1);
-  }
-
+  $definition = wordofthehour_process_api_response($response);
   watchdog('definition', var_export($word . ': ' . $definition, TRUE));
+
+  return $definition;
+}
+
+function wordofthehour_process_api_response($response) {
+  $data = $response->data;
+
+  $definition = trim(substr($data, strpos($data, ':') + 1));
+
+  $ending = strpos($definition, '</dt>');
+
+  $definition = substr($definition, 0, $ending);
+
+  return $definition;
 }
