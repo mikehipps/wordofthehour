@@ -1,0 +1,5 @@
+name = Word Of The Hour
+description = Drupal module for Word Of The Hour.
+core = 6.x
+package = Word Of The Hour
+group = Word Of The Hour

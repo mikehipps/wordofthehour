@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the wordofthehour module.
+ */
+
+/**
+ * Implementation of hook_install.
+ */
+function wordofthehour_install() {
+  drupal_install_schema('wordofthehour');
+  wordofthehour_import_words();
+  drupal_set_message(st('The Word Of The Hour module has been successfully installed.'));
+}
+
+/**
+ * Implementation of hook_uninstall.
+ */
+function wordofthehour_uninstall() {
+  drupal_uninstall_schema('wordofthehour');
+
+  drupal_set_message(st('The Word Of The Hour module has been successfully uninstalled.'));
+}
+
+/**
+ * Implementation of hook_schema.
+ */
+function wordofthehour_schema() {
+  $schema = array();
+
+  $schema['wordofthehour'] = array(
+    'description' => t('This table is used to store Word Of The Hour info'),
+    'fields' => array(
+      'word' => array(
+        'description' => t('The word.'),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'definition' => array(
+        'description' => t('The definition.'),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+    ),
+  );
+  return $schema;
+}
+
+function wordofthehour_import_words() {
+
+  $count = db_result(db_query('SELECT count(*) FROM {wordofthehour}'));
+  if ($count == 0) {
+    $handle = fopen(drupal_get_path('module', 'wordofthehour') . '/includes/words.txt', 'r');
+    if ($handle != FALSE) {
+      while (!feof($handle)) {
+        $line = fgets($handle);
+        if (strlen($line) > 3) {
+          db_query("INSERT INTO {wordofthehour}
+                      (word) VALUES ('%s');", $line);
+        }
+      }
+    }
+    fclose($handle);
+  }
+  return;
+}

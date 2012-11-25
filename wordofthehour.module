@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file Word Of The Hour module
+ * Responsible for Word Of The Hour Drupal hook implementations.
+ */
+
+/**
+ * Implements Drupal's hook_menu().
+ */
+function wordofthehour_menu() {
+  $items = array();
+
+  $items['admin/settings/wordofthehour'] = array(
+    'title' => 'Word Of The Hour Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wordofthehour_settings_form'),
+    'access arguments' => array('administer Word Of The Hour'),
+    'description' => t('Word Of The Hour settings'),
+    'file' => 'wordofthehour.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['wordofthehour'] = array(
+    'title' => 'Word of the Hour',
+    'page callback' => 'wordofthehour_get_word',
+    'access arguments' => array('access content'),
+    'file' => 'wordofthehour.getword.inc',
+    'description' => t('Get word of the hour'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements Drupal's hook_perm().
+ */
+function wordofthehour_perm() {
+  $perms = array(
+    'administer wordofthehour',
+    'view wordofthehour'
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements Drupal's hook_block().
+ */
+function wordofthehour_block($op = 'list', $delta = 0, $edit = array()) {
+  module_load_include('inc', 'wordofthehour', 'wordofthehour.block');
+
+  switch ($op) {
+    case 'list':
+      return wordofthehour_block_list();
+    case 'configure':
+    case 'save':
+      break;
+    case 'view':
+      return wordofthehour_block_view($delta);
+    default:
+      break;
+  }
+}
+
+/**
+ * Implements hook_theme
+ */
+function wordofthehour_theme($existing, $type, $theme, $path) {
+  $tpls_dir = drupal_get_path('module', 'wordofthehour') . '/tpls';
+  return array(
+    'word_of_the_hour' => array(
+      'arguments' => array(
+        'arrivals' => '',
+        'title' => '',
+      ),
+      'path' => $tpls_dir,
+      'template' => 'word-of-the-hour',
+    ),
+  );
+}
+
+function wordofthehour_cron() {
+  module_load_include('inc', 'wordofthehour', 'wordofthehour.db');
+  for ($i = 1; $i <= 10; $i++) {
+    $word = wordofthehour_get_random_word();
+    $definition = wordofthehour_get_definition_from_api($word);
+    wordofthehour_store_definition($word, $definition);
+  }
+}
+
+function wordofthehour_get_definition_from_api($word) {
+  $urlbase = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/";
+  $apikey = "b8c6c7cd-c445-43d2-bf4d-dfed4b1ba55f";
+  
+  $url = $urlbase . urlencode(trim($word)) . '?key=' . $apikey;
+
+  $response = drupal_http_request($url, array());
+  $data = $response->data;
+  
+  $definition = trim(substr($data, strpos($data, ':') + 1));  
+  
+  $multidef = strpos($definition, ':');
+
+  if ($multidef) {
+    $definition = substr($definition, 0, $multidef - 1);
+  }
+  
+  $multidef = strpos($definition, '2');
+
+  if ($multidef) {
+    $definition = substr($definition, 0, $multidef - 1);
+  }
+
+  watchdog('definition', var_export($word . ': ' . $definition, TRUE));
+}
