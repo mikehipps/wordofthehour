@@ -14,7 +14,7 @@ function wordofthehour_menu() {
   $items['admin/settings/wordofthehour'] = array(
     'title' => 'Word Of The Hour Settings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('wordofthehour_settings_form'),
+    'page arguments' => array('wordofthehour_settings'),
     'access arguments' => array('administer Word Of The Hour'),
     'description' => t('Word Of The Hour settings'),
     'file' => 'wordofthehour.admin.inc',

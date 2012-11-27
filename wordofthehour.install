@@ -44,6 +44,11 @@ function wordofthehour_schema() {
         'length' => '255',
         'not null' => FALSE,
       ),
+      'posted' => array(
+        'description' => t('Flag for if this definition has been posted'),
+        'type' => 'int',
+        'not null' => TRUE, 
+      ),
     ),
   );
   return $schema;
