@@ -83,10 +83,19 @@ function wordofthehour_theme($existing, $type, $theme, $path) {
 
 function wordofthehour_cron() {
   module_load_include('inc', 'wordofthehour', 'wordofthehour.db');
-  for ($i = 1; $i <= 10; $i++) {
+  module_load_include('inc', 'wordofthehour', 'wordofthehour.twitter');
+
+  for ($i = 1; $i <= 3; $i++) {
     $word = wordofthehour_get_random_word();
     $definition = wordofthehour_get_definition_from_api($word);
     wordofthehour_store_definition($word, $definition);
+  }
+  $post_time = variable_get('wordofthehour_last_tweet', time());
+  if ($post_time < time() - 3600) {
+    $random_def = $word . ": " . $definition;
+    post_tweet(strip_tags($random_def));
+    variable_set('wordofthehour_last_tweet', time());
+    wordofthehour_set_word_as_posted($word);
   }
 }
 

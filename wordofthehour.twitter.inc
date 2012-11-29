@@ -25,7 +25,7 @@ function post_tweet($tweet_text) {
   $connection->request('POST', 
     $connection->url('1.1/statuses/update'), 
     array('status' => $tweet_text));
-  print $connection->response['response'];
+  watchdog('twitter', var_export($connection->response, TRUE));
 
   return $connection->response['response'];
 }

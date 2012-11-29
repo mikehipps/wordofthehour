@@ -19,3 +19,11 @@ function wordofthehour_get_random_word() {
 
   return $word;
 }
+
+function wordofthehour_set_word_as_posted($word) {
+  $sql = "UPDATE {wordofthehour}
+         SET posted = 1
+         WHERE word = '%s'";
+
+  db_query($sql, $word);
+}
