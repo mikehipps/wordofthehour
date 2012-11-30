@@ -5,7 +5,7 @@
  *
  * @return
  */
-function wordofthehour_settings(&$form_state) {
+function wordofthehour_settings($form, &$form_state) {
   $form = array();
 
   $form['wordofthehour_consumer_key'] = array(

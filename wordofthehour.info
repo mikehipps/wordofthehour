@@ -1,5 +1,12 @@
 name = Word Of The Hour
 description = Drupal module for Word Of The Hour.
-core = 6.x
+core = 7.x
 package = Word Of The Hour
 group = Word Of The Hour
+
+files[] = wordofthehour.admin.inc
+files[] = wordofthehour.block.inc
+files[] = wordofthehour.db.inc
+files[] = wordofthehour.install
+files[] = wordofthehour.module
+files[] = wordofthehour.twitter.inc

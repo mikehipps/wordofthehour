@@ -9,7 +9,6 @@
  * Implementation of hook_install.
  */
 function wordofthehour_install() {
-  drupal_install_schema('wordofthehour');
   wordofthehour_import_words();
   drupal_set_message(st('The Word Of The Hour module has been successfully installed.'));
 }
@@ -18,8 +17,6 @@ function wordofthehour_install() {
  * Implementation of hook_uninstall.
  */
 function wordofthehour_uninstall() {
-  drupal_uninstall_schema('wordofthehour');
-
   drupal_set_message(st('The Word Of The Hour module has been successfully uninstalled.'));
 }
 
@@ -47,7 +44,7 @@ function wordofthehour_schema() {
       'posted' => array(
         'description' => t('Flag for if this definition has been posted'),
         'type' => 'int',
-        'not null' => TRUE, 
+        'not null' => FALSE,
       ),
     ),
   );
@@ -56,15 +53,18 @@ function wordofthehour_schema() {
 
 function wordofthehour_import_words() {
 
-  $count = db_result(db_query('SELECT count(*) FROM {wordofthehour}'));
+  $count = db_query('SELECT count(*) FROM {wordofthehour}')->fetchField();
+
   if ($count == 0) {
     $handle = fopen(drupal_get_path('module', 'wordofthehour') . '/includes/words.txt', 'r');
+
     if ($handle != FALSE) {
       while (!feof($handle)) {
         $line = fgets($handle);
+
         if (strlen($line) > 3) {
           db_query("INSERT INTO {wordofthehour}
-                      (word) VALUES ('%s');", $line);
+                      (word) VALUES (:line)", array(':line' => $line));
         }
       }
     }

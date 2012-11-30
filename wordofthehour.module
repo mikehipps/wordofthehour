@@ -23,9 +23,8 @@ function wordofthehour_menu() {
 
   $items['wordofthehour'] = array(
     'title' => 'Word of the Hour',
-    'page callback' => 'wordofthehour_get_word',
-    'access arguments' => array('access content'),
-    'file' => 'wordofthehour.getword.inc',
+    'page callback' => 'wordofthehour_page',
+    'access callback' => TRUE,
     'description' => t('Get word of the hour'),
     'type' => MENU_CALLBACK,
   );
@@ -36,47 +35,25 @@ function wordofthehour_menu() {
 /**
  * Implements Drupal's hook_perm().
  */
-function wordofthehour_perm() {
-  $perms = array(
-    'administer wordofthehour',
-    'view wordofthehour'
+function wordofthehour_permissions() {
+  return array(
+    'administer wordofthehour' => array(
+      'title' => t('Administer Word Of The Hour settings'),
+    ),
   );
-
-  return $perms;
-}
-
-/**
- * Implements Drupal's hook_block().
- */
-function wordofthehour_block($op = 'list', $delta = 0, $edit = array()) {
-  module_load_include('inc', 'wordofthehour', 'wordofthehour.block');
-
-  switch ($op) {
-    case 'list':
-      return wordofthehour_block_list();
-    case 'configure':
-    case 'save':
-      break;
-    case 'view':
-      return wordofthehour_block_view($delta);
-    default:
-      break;
-  }
 }
 
 /**
  * Implements hook_theme
  */
-function wordofthehour_theme($existing, $type, $theme, $path) {
-  $tpls_dir = drupal_get_path('module', 'wordofthehour') . '/tpls';
-  return array(
-    'word_of_the_hour' => array(
-      'arguments' => array(
-        'arrivals' => '',
-        'title' => '',
+function wordofthehour_theme() {
+   return array(
+    'wordofthehour' => array(
+      'template' =>  'tpls/wordofthehour',
+      'variables' => array(
+        'word' => NULL,
+        'definition' => NULL,
       ),
-      'path' => $tpls_dir,
-      'template' => 'word-of-the-hour',
     ),
   );
 }
@@ -90,11 +67,16 @@ function wordofthehour_cron() {
     $definition = wordofthehour_get_definition_from_api($word);
     wordofthehour_store_definition($word, $definition);
   }
-  $post_time = variable_get('wordofthehour_last_tweet', time());
+  $post_time = variable_get('wordofthehour_last_tweet', 10);
   if ($post_time < time() - 3600) {
     $random_def = $word . ": " . $definition;
     post_tweet(strip_tags($random_def));
     variable_set('wordofthehour_last_tweet', time());
+    variable_set('wordofthehour_word', $word);
+    variable_set('wordofthehour_definition', $definition);
+
+    $date = date('m/d/Y', $post_time);
+    watchdog('post-time', var_export($date, TRUE));
     wordofthehour_set_word_as_posted($word);
   }
 }
@@ -108,7 +90,6 @@ function wordofthehour_get_definition_from_api($word) {
   $response = drupal_http_request($url, array());
 
   $definition = wordofthehour_process_api_response($response);
-  watchdog('definition', var_export($word . ': ' . $definition, TRUE));
 
   return $definition;
 }
@@ -123,4 +104,17 @@ function wordofthehour_process_api_response($response) {
   $definition = substr($definition, 0, $ending);
 
   return $definition;
+}
+
+function wordofthehour_page() {
+  module_load_include('inc', 'wordofthehour', 'wordofthehour.db');
+
+  $word = variable_get('wordofthehour_word', 'hands down');
+  ;
+  $definition = variable_get('wordofthehour_definition', 'easily');
+
+  return theme('wordofthehour', array(
+    'word' =>$word,
+    'definition' => $definition,
+  ));
 }
